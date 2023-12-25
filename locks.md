@@ -51,9 +51,9 @@ int main()
 
 ```C
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-pthread_cond_signal(pthread_cond_t *cond);
+pthread_cond_signal(pthread_cond_t *cond); // Signals to only one of waiting processes
 pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
-pthread_cond_broadcast(pthread_cond_t *cond);
+pthread_cond_broadcast(pthread_cond_t *cond); // Signals to wall waiting processes
 ```
 
 Example:
