@@ -1,9 +1,9 @@
 ## Pthread mutex lock
 
-```C
-pthread_mutex_t mutexlock = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_lock(&mutexlock);
-pthread_mutex_unlock(&mutexlock);
+```
+pthread_mutex_t mutexlock
+pthread_mutex_lock(pthread_mutex_t *mutexlock)
+pthread_mutex_unlock(pthread_mutex_t *mutexlock)
 ```
 
 Example:
@@ -49,11 +49,11 @@ int main()
 ```
 ## Pthread conditional lock
 
-```C
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-pthread_cond_signal(pthread_cond_t *cond); // Signals to only one of waiting processes
-pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex);
-pthread_cond_broadcast(pthread_cond_t *cond); // Signals to wall waiting processes
+```
+pthread_cond_t cond
+pthread_cond_signal(pthread_cond_t *cond) // Signals to only one of waiting processes
+pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
+pthread_cond_broadcast(pthread_cond_t *cond) // Signals to wall waiting processes
 ```
 
 Example:
@@ -87,9 +87,9 @@ int main()
   for (;;)
   {
     pthread_mutex_lock(&mutex);
+
     while (cnt == 0)
       pthread_cond_wait(&cond, &mutex);
-
     while (candy > 0)
       candy--;
 
@@ -101,6 +101,60 @@ int main()
 
 ## Semaphore
 
-```C
+```
+sem_init(sem_t *sem, int pshared, unsigned int value)
+sem_wait(sem_t *sem)
+sem_post(sem_t *sem)
+```
 
+Example (Circular buffer):
+
+```C
+#include <pthread.h>
+#include <semaphore.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define SIZE 10
+
+char bag[SIZE] = {0};
+int empty = 0, candy = 0;
+sem_t empty_cnt;
+sem_t candy_cnt;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void *takecandy(void *arg)
+{
+  for (;;)
+  {
+    sem_wait(&candy_cnt);
+    pthread_mutex_lock(&mutex);
+
+    empty = (empty + 1) % SIZE;
+
+    pthread_mutex_unlock(&mutex);
+    sem_post(&empty_cnt);
+  }
+}
+
+int main()
+{
+  pthread t1;
+  sem_init(&empty_cnt, 0, SIZE);
+  sem_init(&candy_cnt, 0, 0);
+  pthread_create(&t1, NULL, takecandy, NULL);
+
+  for (int i = 0; ; i++)
+  {
+    sem_wait(&candy_cnt);
+    pthread_mutex_lock(&mutex);
+
+    bag[candy] = i;
+    candy = (candy + 1) % SIZE;
+
+    pthread_mutex_unlock(&mutex);
+    sem_post(&candy_cnt);
+  }
+}
 ```
