@@ -217,6 +217,68 @@ int main()
 
 ## Epoll
 
-```C
+Server example:
 
+```C
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/epoll.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+#define BUF_SIZE 100
+#define PORT 8000
+#define LISTEN_BACKLOG 32
+#define MAX_EVENTS 10
+
+int main()
+{
+  struct sockaddr_in addr, remote_addr;
+  int sfd, cfd, nfds, epollfd;
+  ssize_t num_read;
+  socklen_t addrlen = sizeof(struct sockaddr_in);
+  char msg[BUF_SIZE];
+  struct epoll_event ev, events[MAX_EVENTS];
+
+  sfd = socket(AF_INET, SOCK_STREAM, 0);
+  memset(&addr, 0, sizeof(struct sockaddr_in));
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(PORT);
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+  bind(sfd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in));
+  listen(sfd, LISTEN_BACKLOG);
+
+  epollfd = epoll_create1(0);
+  ev.events = EPOLLIN | EPOLLOUT;
+  ev.data.fd = sfd;
+  epoll_ctl(epollfd, EPOLL_CTL_ADD, sfd, &ev);
+
+  for (;;)
+  {
+    nfds = epoll_wait(epollfd, events, MAX_EVENTS);
+    for (int i = 0; i < nfds; ++i)
+    {
+      if (events[i].data.fd == sfd)
+      {
+        memset(&remote_addr, 0, sizeof(struct sockaddr_in));
+        cfd = accept(sfd, (struct sockaddr *)&remote_addr, &addrlen);
+
+        int flags = fcntl(cfd, F_GETFL, 0);
+        flags |= O_NONBLOCK;
+        ev.events = EPOLLIN | EPOLLOUT;
+        ev.data.fd = cfd;
+        epoll_ctl(epollfd, EPOLL_CTL_ADD, cfd, &ev);
+      }
+      else
+      {
+        while ((num_read = read(events[i].data.fd, msg, BUF_SIZE)) > 0)
+          write(STDOUT_FILENO, msg, num_read);
+      }
+    }
+  }
+}
 ```
