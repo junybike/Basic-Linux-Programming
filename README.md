@@ -1,5 +1,5 @@
 # Linux-Programming
-Basic Linux programming from CMPT 218.
+Basic Linux programming from SFU CMPT 218.
 
 - [Fork](fork.md)
 - [Pthread](pthread.md)
