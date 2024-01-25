@@ -5,4 +5,4 @@ Basic Linux programming from SFU CMPT 218.
 - [Pthread](pthread.md)
 - [Locks](locks.md)
 - [Networking](networking.md)
-- [ICP](icp.md)
+- [IPC](ipc.md)
